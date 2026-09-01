@@ -1,0 +1,24 @@
+{
+  "name": "CalBro",
+  "short_name": "CalBro",
+  "description": "AI-powered daily nutrition tracker with camera-based food logging.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#eef1f4",
+  "theme_color": "#eef1f4",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/appicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/appicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

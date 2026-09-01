@@ -1,26 +1,152 @@
+@import url("https://fonts.googleapis.com/css2?family=Asap+Sharp:ital,wght@0,100..900;1,100..900&display=swap");
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: "Asap Sharp", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "Asap Sharp", ui-sans-serif, system-ui, sans-serif;
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  --background: #eef1f4;
+  --foreground: #1a1d21;
+  --card: #ffffff;
+  --card-foreground: #1a1d21;
+  --popover: #ffffff;
+  --popover-foreground: #1a1d21;
+  --primary: #b8e62e;
+  --primary-foreground: #1a2e05;
+  --secondary: #f3f5f7;
+  --secondary-foreground: #1a1d21;
+  --muted: #e8ebef;
+  --muted-foreground: #8b939e;
+  --accent: #f0f8e0;
+  --accent-foreground: #1a2e05;
+  --destructive: #ff5a4f;
+  --border: #e8ebef;
+  --input: #e8ebef;
+  --ring: #b8e62e;
+  --radius: 1.125rem;
+
+  /* Macro colors from reference design */
+  --nv-lime: #b8e62e;
+  --nv-lime-dark: #9acc1a;
+  --nv-lime-glow: rgba(184, 230, 46, 0.45);
+  --nv-carbs: #ff9f43;
+  --nv-fat: #ffd166;
+  --nv-protein: #ff6b6b;
+  --nv-fiber: #6bcb77;
+  --nv-shadow: 0 4px 24px -6px rgba(26, 29, 33, 0.08);
+  --nv-shadow-card: 0 8px 32px -8px rgba(26, 29, 33, 0.1);
+}
+
+@layer base {
+  * { @apply border-border outline-ring/50; }
+  body {
+    @apply bg-background text-foreground;
+    -webkit-font-smoothing: antialiased;
   }
+  html { @apply font-sans; }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.app-shell {
+  min-height: 100dvh;
+  background:
+    radial-gradient(ellipse 120% 60% at 50% -10%, rgba(184, 230, 46, 0.18) 0%, transparent 55%),
+    var(--background);
+}
+
+.nv-card {
+  border-radius: 1.5rem;
+  background: var(--card);
+  box-shadow: var(--nv-shadow);
+}
+
+.nv-tab-bar {
+  background: rgba(255, 255, 255, 0.88);
+  -webkit-backdrop-filter: blur(24px) saturate(1.8);
+  backdrop-filter: blur(24px) saturate(1.8);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  box-shadow: var(--nv-shadow-card);
+}
+
+.nv-tab-pill {
+  background: rgba(255, 255, 255, 0.75);
+  -webkit-backdrop-filter: blur(16px) saturate(1.6);
+  backdrop-filter: blur(16px) saturate(1.6);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 4px 16px -4px rgba(26, 29, 33, 0.12);
+}
+
+.nv-fab-scan {
+  background: linear-gradient(145deg, #c8f04a 0%, var(--nv-lime) 45%, var(--nv-lime-dark) 100%);
+  box-shadow:
+    0 0 0 6px rgba(184, 230, 46, 0.2),
+    0 8px 24px -4px var(--nv-lime-glow);
+}
+
+.text-nv-carbs { color: var(--nv-carbs); }
+.text-nv-fat { color: var(--nv-fat); }
+.text-nv-protein { color: var(--nv-protein); }
+.text-nv-lime { color: var(--nv-lime-dark); }
+.bg-nv-carbs { background-color: var(--nv-carbs); }
+.bg-nv-fat { background-color: var(--nv-fat); }
+.bg-nv-protein { background-color: var(--nv-protein); }
+.bg-nv-lime { background-color: var(--nv-lime); }
+
+.pt-safe { padding-top: env(safe-area-inset-top, 0px); }
+.pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
+
+.mobile-container {
+  width: 100%;
+  max-width: 26rem;
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+}
+
+.badge-completed {
+  background: rgba(184, 230, 46, 0.2);
+  color: #4a6b0a;
+}
+.badge-progress {
+  background: rgba(255, 209, 102, 0.25);
+  color: #9a6b00;
+}
+
+@keyframes scan-sweep {
+  0%, 100% { top: 8%; opacity: 0.6; }
+  50% { top: 92%; opacity: 1; }
+}
+
+.scan-line {
+  animation: scan-sweep 2.4s ease-in-out infinite;
 }
