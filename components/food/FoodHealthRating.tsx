@@ -21,15 +21,15 @@ export function FoodHealthRating({ rating, compact = false, className }: FoodHea
         </span>
       </div>
 
-      <div className="relative h-2.5 overflow-hidden rounded-full">
+      <div className="relative isolate h-2.5 overflow-hidden rounded-full">
         <div
-          className="absolute inset-0"
+          className="absolute inset-0 rounded-full"
           style={{
             background: "linear-gradient(90deg, #ff6b6b 0%, #ff9f43 25%, #ffd166 50%, #a8e063 75%, #6bcb77 100%)",
           }}
         />
         <span
-          className="absolute top-1/2 size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-md"
+          className="absolute top-1/2 z-10 size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-md"
           style={{ left: `${rating.score}%`, backgroundColor: color }}
         />
       </div>

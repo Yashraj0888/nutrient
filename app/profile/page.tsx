@@ -17,6 +17,7 @@ import { MetabolicTargetsCard } from "@/components/profile/MetabolicTargetsCard"
 import { ProfileSection, ProfileSelect, type ProfileSelectOption } from "@/components/profile/ProfileSelect";
 import { clearProfile, generateId, saveProfile } from "@/lib/storage";
 import { useProfile } from "@/hooks/use-profile";
+import { APP_NAME } from "@/lib/brand";
 import type { ActivityLevel, Gender, Goal, UserProfile } from "@/lib/types";
 import { compressAvatarFile } from "@/lib/image-utils";
 import { cn } from "@/lib/utils";
@@ -139,7 +140,7 @@ function ProfileForm({
     saveProfile(next);
     refresh();
     toast.success("Profile saved!");
-    router.push("/");
+    router.replace("/");
   }
 
   function handleReset() {
@@ -166,7 +167,13 @@ function ProfileForm({
 
   return (
     <div className="mobile-container pb-2 pt-safe pt-5">
-      <PageHeader title="Account" />
+      <PageHeader title={profile ? "Account" : "Set up your profile"} />
+
+      {!profile && (
+        <p className="mt-2 text-sm text-muted-foreground">
+          Welcome to {APP_NAME}. Add your details to get personalized calorie and macro targets.
+        </p>
+      )}
 
       <div className="nv-card mb-4 mt-4 flex flex-col items-center gap-3 p-5">
         <ProfileAvatar
@@ -286,7 +293,7 @@ function ProfileForm({
         className="mt-5 h-12 w-full rounded-full bg-nv-lime text-base font-bold text-primary-foreground hover:bg-nv-lime/90"
         onClick={handleSave}
       >
-        <IconCheck size={18} /> Save profile
+        <IconCheck size={18} /> {profile ? "Save profile" : "Get started"}
       </Button>
 
       {profile && (

@@ -1,20 +1,19 @@
 "use client";
 
-import Link from "next/link";
 import { BMICard } from "@/components/analytics/BMICard";
 import { CalorieTrendChart } from "@/components/analytics/CalorieTrendChart";
 import { MacroTrendChart } from "@/components/analytics/MacroTrendChart";
 import { FiberTrendChart } from "@/components/analytics/FiberTrendChart";
 import { DailyNutrientBreakdown } from "@/components/dashboard/DailyNutrientBreakdown";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { Button } from "@/components/ui/button";
-import { useProfile } from "@/hooks/use-profile";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useRequireProfile } from "@/hooks/use-require-profile";
 import { computeDailyTotals, getDailyLog, getLogsInRange, todayKey } from "@/lib/storage";
 import type { DayIntakePoint } from "@/lib/types";
 import { useMemo } from "react";
 
 export default function AnalyticsPage() {
-  const { profile, targets, loaded } = useProfile();
+  const { profile, targets, isReady } = useRequireProfile();
   const rangeDays = 7;
 
   const series: DayIntakePoint[] = useMemo(() => {
@@ -38,15 +37,11 @@ export default function AnalyticsPage() {
 
   const todayTotals = useMemo(() => computeDailyTotals(getDailyLog(todayKey())), []);
 
-  if (!loaded) return null;
-
-  if (!profile || !targets) {
+  if (!isReady || !profile || !targets) {
     return (
-      <div className="mobile-container pt-safe pt-20 text-center">
-        <p className="text-muted-foreground">Set up your profile first.</p>
-        <Button asChild className="mt-4 rounded-full bg-nv-lime text-primary-foreground">
-          <Link href="/profile">Set up your profile</Link>
-        </Button>
+      <div className="mobile-container pt-safe pt-5">
+        <Skeleton className="h-14 w-full rounded-2xl" />
+        <Skeleton className="mt-4 h-40 w-full rounded-3xl" />
       </div>
     );
   }

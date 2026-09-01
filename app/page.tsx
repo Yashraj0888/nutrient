@@ -1,7 +1,5 @@
 "use client";
 
-import Link from "next/link";
-import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { DailyCaloriesCard } from "@/components/dashboard/DailyCaloriesCard";
 import { HomeQuickStats } from "@/components/dashboard/HomeQuickStats";
@@ -11,12 +9,10 @@ import { DateStrip } from "@/components/dashboard/DateStrip";
 import { TodayMealCard } from "@/components/dashboard/TodayMealCard";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { IconPlus } from "@/components/icons/nutrivision-icons";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useProfile } from "@/hooks/use-profile";
+import { useRequireProfile } from "@/hooks/use-require-profile";
 import { useDailyLog } from "@/hooks/use-daily-log";
 import { formatDayHeading, removeMealEntry, todayKey } from "@/lib/storage";
-import { APP_NAME } from "@/lib/brand";
 import { useCaptureFlow } from "@/components/capture/capture-context";
 
 function greeting() {
@@ -27,7 +23,7 @@ function greeting() {
 }
 
 export default function DashboardPage() {
-  const { profile, targets, loaded } = useProfile();
+  const { profile, targets, isReady } = useRequireProfile();
   const [dateKey, setDateKey] = useState(() => todayKey());
   const [followToday, setFollowToday] = useState(true);
   const { log, totals } = useDailyLog(dateKey);
@@ -62,47 +58,11 @@ export default function DashboardPage() {
     [log.meals]
   );
 
-  if (!loaded) {
+  if (!isReady || !profile || !targets) {
     return (
       <div className="mobile-container pt-safe pt-5">
         <Skeleton className="h-14 w-full rounded-2xl" />
         <Skeleton className="mt-4 h-28 w-full rounded-3xl" />
-      </div>
-    );
-  }
-
-  if (!profile || !targets) {
-    return (
-      <div className="mobile-container flex flex-col items-center gap-6 px-4 pt-safe pt-24 text-center">
-        <Image src="/appicon.png" alt={APP_NAME} width={80} height={80} className="rounded-2xl shadow-[var(--nv-shadow)]" priority />
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">{APP_NAME}</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            AI-powered nutrition tracking — scan meals, hit your macros, and get daily insights.
-          </p>
-        </div>
-
-        <div className="nv-card w-full space-y-3 p-5 text-left">
-          <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">What you get</p>
-          <ul className="space-y-2.5 text-sm text-muted-foreground">
-            <li className="flex gap-2">
-              <span className="text-nv-lime-dark">✓</span>
-              Instant calorie & macro breakdown from food photos
-            </li>
-            <li className="flex gap-2">
-              <span className="text-nv-lime-dark">✓</span>
-              Personalized daily targets from your profile
-            </li>
-            <li className="flex gap-2">
-              <span className="text-nv-lime-dark">✓</span>
-              Progress charts and AI nutrition tips
-            </li>
-          </ul>
-        </div>
-
-        <Button asChild className="h-12 w-full rounded-full bg-nv-lime text-base font-bold text-primary-foreground hover:bg-nv-lime/90">
-          <Link href="/profile">Set up your profile</Link>
-        </Button>
       </div>
     );
   }

@@ -17,7 +17,6 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatFoodName, formatMealName, guessMealTypeByTime, scaleFoodItem, sumFoodItems } from "@/lib/food-items";
 import type { DetectedFoodItem, FoodAnalysisResult, MealType } from "@/lib/types";
 import { MEAL_TYPES, MEAL_TYPE_LABELS } from "@/lib/types";
@@ -175,7 +174,7 @@ function FoodConfirmationContent({
   }
 
   return (
-    <DrawerContent className="mx-auto flex max-h-[92dvh] max-w-lg flex-col overflow-hidden pb-safe">
+    <DrawerContent className="mx-auto flex h-[92dvh] max-h-[92dvh] max-w-lg flex-col overflow-hidden pb-safe">
         <DrawerHeader className="shrink-0 pb-2">
           <div className="flex items-start gap-3">
             {previewUrl && (
@@ -220,8 +219,8 @@ function FoodConfirmationContent({
           </div>
         </DrawerHeader>
 
-        <ScrollArea className="min-h-0 flex-1 px-4">
-          <div className="flex flex-col gap-2 pb-3">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4">
+          <div className="flex flex-col gap-2 pb-4">
             {scaledItems.length === 0 && (
               <p className="py-8 text-center text-sm text-muted-foreground">
                 No items yet — add one manually below.
@@ -233,7 +232,7 @@ function FoodConfirmationContent({
               <div
                 key={id}
                 className={cn(
-                  "flex flex-col gap-2.5 rounded-2xl border border-border bg-card p-3 transition",
+                  "flex flex-col gap-2.5 overflow-hidden rounded-2xl border border-border bg-card p-3 transition",
                   !checked && "opacity-50"
                 )}
               >
@@ -309,16 +308,8 @@ function FoodConfirmationContent({
             );
             })}
 
-            {!showAddCustom ? (
-              <button
-                type="button"
-                onClick={() => setShowAddCustom(true)}
-                className="tap-target mt-1 w-full rounded-2xl border border-dashed border-border px-4 py-3 text-center text-sm font-medium text-muted-foreground transition active:bg-muted"
-              >
-                + Add a custom item
-              </button>
-            ) : (
-              <div className="mt-1 flex flex-col gap-3 rounded-2xl border border-border bg-card p-3">
+            {showAddCustom && (
+              <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-3">
                 <div className="flex flex-col gap-1.5">
                   <Label className="text-[12px] font-semibold text-muted-foreground">Food name</Label>
                   <Input
@@ -369,10 +360,10 @@ function FoodConfirmationContent({
               </div>
             )}
           </div>
-        </ScrollArea>
+        </div>
 
-        <DrawerFooter className="shrink-0 gap-3 border-t bg-muted/40 pt-3">
-          <FoodHealthRating rating={mealHealth} />
+        <DrawerFooter className="relative z-10 shrink-0 gap-3 border-t bg-background pt-3">
+          {!showPerItemRatings && <FoodHealthRating rating={mealHealth} />}
           <div className="grid grid-cols-4 gap-2 text-center">
             <TotalStat label="kcal" value={Math.round(totals.calories)} color="text-foreground" />
             <TotalStat label="Protein" value={`${Math.round(totals.protein)}g`} color="text-nv-protein" />
@@ -387,6 +378,23 @@ function FoodConfirmationContent({
           >
             Confirm &amp; log ({checkedCount})
           </Button>
+          {!showAddCustom ? (
+            <button
+              type="button"
+              onClick={() => setShowAddCustom(true)}
+              className="tap-target w-full py-1 text-center text-sm font-medium text-muted-foreground transition active:text-foreground"
+            >
+              + Add a custom item
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowAddCustom(false)}
+              className="tap-target w-full py-1 text-center text-sm font-medium text-muted-foreground transition active:text-foreground"
+            >
+              Cancel custom item
+            </button>
+          )}
         </DrawerFooter>
     </DrawerContent>
   );
