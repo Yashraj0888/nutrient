@@ -63,15 +63,27 @@
   --nv-shadow: 0 4px 24px -6px rgba(26, 29, 33, 0.08);
   --nv-shadow-card: 0 8px 32px -8px rgba(26, 29, 33, 0.1);
   --nv-bottom-nav-height: 6.75rem;
+  --nv-chat-input-height: 3.75rem;
 }
 
 @layer base {
   * { @apply border-border outline-ring/50; }
+  html,
   body {
     @apply bg-background text-foreground;
     -webkit-font-smoothing: antialiased;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
   html { @apply font-sans; }
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar,
+  *::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+    background: transparent;
+  }
 }
 
 .app-shell {
@@ -141,6 +153,48 @@
 
 .pb-nav {
   padding-bottom: calc(var(--nv-bottom-nav-height) + env(safe-area-inset-bottom, 0px));
+}
+
+.insights-page {
+  height: calc(
+    100dvh - var(--nv-bottom-nav-height) - env(safe-area-inset-bottom, 0px)
+  );
+  overflow: hidden;
+}
+
+.insights-chat-input {
+  bottom: calc(var(--nv-bottom-nav-height) + env(safe-area-inset-bottom, 0px) + 5px);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.insights-chat-input::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -1.25rem;
+  height: 1.25rem;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(238, 241, 244, 0) 0%,
+    var(--background) 100%
+  );
+}
+
+.insights-coach {
+  padding-bottom: calc(var(--nv-chat-input-height) + 0.5rem + 5px);
+}
+
+.insights-messages {
+  overflow-anchor: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.insights-message {
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .no-scrollbar::-webkit-scrollbar { display: none; }

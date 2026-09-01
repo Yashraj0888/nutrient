@@ -175,9 +175,9 @@ function FoodConfirmationContent({
   }
 
   return (
-    <DrawerContent className="mx-auto flex max-h-[92dvh] max-w-lg flex-col pb-safe">
-        <DrawerHeader className="pb-2">
-          <div className="flex items-center gap-3">
+    <DrawerContent className="mx-auto flex max-h-[92dvh] max-w-lg flex-col overflow-hidden pb-safe">
+        <DrawerHeader className="shrink-0 pb-2">
+          <div className="flex items-start gap-3">
             {previewUrl && (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -186,12 +186,13 @@ function FoodConfirmationContent({
                 className="size-14 shrink-0 rounded-xl object-cover ring-1 ring-border"
               />
             )}
-            <div className="flex-1 text-left">
-              <Input
+            <div className="min-w-0 flex-1 text-left">
+              <textarea
                 value={mealName}
                 onChange={(e) => setMealName(e.target.value)}
                 placeholder="Meal name"
-                className="h-9 border-none px-0 text-base font-semibold shadow-none focus-visible:ring-0"
+                rows={2}
+                className="w-full resize-none border-none bg-transparent p-0 text-base font-semibold leading-snug break-words shadow-none outline-none focus-visible:ring-0"
               />
               <DrawerDescription className="text-left">
                 Review the detected items, adjust portions, then confirm.
@@ -219,7 +220,7 @@ function FoodConfirmationContent({
           </div>
         </DrawerHeader>
 
-        <ScrollArea className="flex-1 px-4">
+        <ScrollArea className="min-h-0 flex-1 px-4">
           <div className="flex flex-col gap-2 pb-3">
             {scaledItems.length === 0 && (
               <p className="py-8 text-center text-sm text-muted-foreground">
@@ -232,35 +233,48 @@ function FoodConfirmationContent({
               <div
                 key={id}
                 className={cn(
-                  "flex flex-col gap-2 rounded-2xl border border-border bg-card p-3 transition",
+                  "flex flex-col gap-2.5 rounded-2xl border border-border bg-card p-3 transition",
                   !checked && "opacity-50"
                 )}
               >
-                <div className="flex items-center gap-3">
-                <Checkbox
-                  checked={checked}
-                  onCheckedChange={() => toggleChecked(id)}
-                  className="tap-target size-6 shrink-0"
-                />
-                <div className="flex-1 min-w-0">
-                  <p className="truncate font-medium">{formatFoodName(item)}</p>
-                  <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs">
-                    <span className="flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 font-medium">
-                      <NutrientIcon type="calories" size={12} />
-                      {item.calories} kcal
-                    </span>
-                    <span className="rounded-full bg-nv-protein/15 px-2 py-0.5 font-medium text-nv-protein">
-                      Protein {item.protein}g
-                    </span>
-                    <span className="rounded-full bg-nv-carbs/15 px-2 py-0.5 font-medium text-nv-carbs">
-                      Carbs {item.carbs}g
-                    </span>
-                    <span className="rounded-full bg-nv-lime/15 px-2 py-0.5 font-medium text-nv-lime-dark">
-                      Fiber {item.fiber}g
-                    </span>
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    checked={checked}
+                    onCheckedChange={() => toggleChecked(id)}
+                    className="tap-target mt-0.5 size-6 shrink-0"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold leading-snug break-words">{formatFoodName(item)}</p>
                   </div>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    className="tap-target size-8 shrink-0 rounded-full text-muted-foreground hover:text-destructive"
+                    onClick={() => removeItem(id)}
+                    aria-label={`Remove ${item.name}`}
+                  >
+                    <IconTrash size={14} />
+                  </Button>
                 </div>
-                <div className="flex shrink-0 items-center gap-1">
+
+                <div className="flex flex-wrap gap-1.5 pl-9">
+                  <span className="flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
+                    <NutrientIcon type="calories" size={12} />
+                    {item.calories} kcal
+                  </span>
+                  <span className="rounded-full bg-nv-protein/15 px-2 py-0.5 text-xs font-medium text-nv-protein">
+                    Protein {item.protein}g
+                  </span>
+                  <span className="rounded-full bg-nv-carbs/15 px-2 py-0.5 text-xs font-medium text-nv-carbs">
+                    Carbs {item.carbs}g
+                  </span>
+                  <span className="rounded-full bg-nv-lime/15 px-2 py-0.5 text-xs font-medium text-nv-lime-dark">
+                    Fiber {item.fiber}g
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-start gap-2 pl-9">
                   <Button
                     type="button"
                     size="icon"
@@ -271,7 +285,7 @@ function FoodConfirmationContent({
                   >
                     <IconMinus size={14} />
                   </Button>
-                  <span className="w-12 text-center text-sm font-medium tabular-nums">
+                  <span className="min-w-[3.5rem] text-center text-sm font-medium tabular-nums">
                     {item.estimatedGrams}g
                   </span>
                   <Button
@@ -284,19 +298,13 @@ function FoodConfirmationContent({
                   >
                     <IconPlus size={14} />
                   </Button>
-                  <Button
-                    type="button"
-                    size="icon"
-                    variant="ghost"
-                    className="tap-target size-8 rounded-full text-muted-foreground hover:text-destructive"
-                    onClick={() => removeItem(id)}
-                    aria-label={`Remove ${item.name}`}
-                  >
-                    <IconTrash size={14} />
-                  </Button>
                 </div>
-                </div>
-                {itemHealth && <FoodHealthRating rating={itemHealth} compact />}
+
+                {itemHealth && (
+                  <div className="pl-9">
+                    <FoodHealthRating rating={itemHealth} compact />
+                  </div>
+                )}
               </div>
             );
             })}
@@ -305,7 +313,7 @@ function FoodConfirmationContent({
               <button
                 type="button"
                 onClick={() => setShowAddCustom(true)}
-                className="tap-target mt-1 rounded-2xl border border-dashed border-border py-3 text-sm font-medium text-muted-foreground transition active:bg-muted"
+                className="tap-target mt-1 w-full rounded-2xl border border-dashed border-border px-4 py-3 text-center text-sm font-medium text-muted-foreground transition active:bg-muted"
               >
                 + Add a custom item
               </button>
@@ -363,7 +371,7 @@ function FoodConfirmationContent({
           </div>
         </ScrollArea>
 
-        <DrawerFooter className="gap-3 border-t bg-muted/40 pt-3">
+        <DrawerFooter className="shrink-0 gap-3 border-t bg-muted/40 pt-3">
           <FoodHealthRating rating={mealHealth} />
           <div className="grid grid-cols-4 gap-2 text-center">
             <TotalStat label="kcal" value={Math.round(totals.calories)} color="text-foreground" />
@@ -377,7 +385,7 @@ function FoodConfirmationContent({
             disabled={checkedCount === 0}
             onClick={handleConfirm}
           >
-            Confirm &amp; Log to Day ({checkedCount})
+            Confirm &amp; log ({checkedCount})
           </Button>
         </DrawerFooter>
     </DrawerContent>

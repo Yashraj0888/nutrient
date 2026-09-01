@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
-import { generateDailyInsights } from "@/lib/gemini";
+import { answerNutritionQuestion } from "@/lib/gemini";
 import { toPublicApiError } from "@/lib/api-errors";
-import { nutritionCoachContextSchema } from "@/lib/insights-api-schema";
+import { insightsChatRequestSchema } from "@/lib/insights-api-schema";
 
 export const runtime = "nodejs";
 
@@ -14,7 +13,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
   }
 
-  const parsed = nutritionCoachContextSchema.safeParse(body);
+  const parsed = insightsChatRequestSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
       { error: parsed.error.issues.map((i) => i.message).join(", ") },
@@ -23,10 +22,14 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await generateDailyInsights(parsed.data);
-    return NextResponse.json(result);
+    const answer = await answerNutritionQuestion(
+      parsed.data.context,
+      parsed.data.question,
+      parsed.data.history
+    );
+    return NextResponse.json({ answer });
   } catch (error) {
-    console.error("[generate-insights] failed", error);
+    console.error("[insights-chat] failed", error);
     const { message, status } = toPublicApiError(error);
     return NextResponse.json({ error: message }, { status });
   }

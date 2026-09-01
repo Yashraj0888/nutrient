@@ -1,5 +1,6 @@
 import { GoogleGenAI, Type, type Schema } from "@google/genai";
 import type { DailyTotals, DetectedFoodItem, FoodAnalysisResult, NutrientTargets } from "./types";
+import type { NutritionCoachContext } from "./nutrition-coach";
 import { generateId } from "./storage";
 import { hasSuspiciousMicronutrients, mergeMicronutrients } from "./nutrient-validation";
 
@@ -373,29 +374,35 @@ const insightSchema: Schema = {
 };
 
 export async function generateDailyInsights(
-  totals: DailyTotals,
-  targets: NutrientTargets
+  context: NutritionCoachContext
 ): Promise<{ summary: string; insights: { kind: string; nutrient?: string; message: string }[] }> {
   const ai = getGeminiClient();
 
-  const prompt = `You are a friendly registered-dietitian-style assistant.
-Compare the user's logged intake for today against their daily targets and produce
-short, specific, encouraging, and actionable feedback.
+  const prompt = `You are a friendly registered-dietitian-style nutrition coach for the CalBro app.
+The user is viewing their AI insights page. Produce a helpful snapshot of their day so far.
 
-Logged totals (today):
-${JSON.stringify(totals, null, 2)}
+Date: ${context.localDateLabel} (${context.date})
+
+User profile:
+${JSON.stringify(context.profile ?? {}, null, 2)}
+
+Meals logged today (with local timestamps and meal types — use these to answer lunch/dinner questions):
+${JSON.stringify(context.meals, null, 2)}
+
+Running daily totals so far:
+${JSON.stringify(context.totals, null, 2)}
 
 Daily targets:
-${JSON.stringify(targets, null, 2)}
+${JSON.stringify(context.targets, null, 2)}
 
 Write:
-- One 1-2 sentence "summary" of the day overall.
+- One 2-3 sentence "summary" of how the day is going so far. Mention specific meals or times when useful.
 - 3-6 "insights", each tagged as:
-  - "highlight" for goals met or exceeded appropriately (e.g. protein goal hit).
-  - "gap" for meaningful shortfalls, with a concrete food suggestion to close the gap.
-  - "warning" for concerning excesses (e.g. sodium far over target).
+  - "highlight" for goals met or exceeded appropriately.
+  - "gap" for meaningful shortfalls, with a concrete food suggestion.
+  - "warning" for concerning excesses.
   - "info" for neutral observations.
-Keep each message under 160 characters. Be specific with numbers where useful.`;
+Keep each insight message under 160 characters. Be specific with numbers and meal names where useful.`;
 
   const response = await ai.models.generateContent({
     model: GEMINI_MODEL,
@@ -413,4 +420,57 @@ Keep each message under 160 characters. Be specific with numbers where useful.`;
   }
 
   return JSON.parse(text);
+}
+
+export interface CoachChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export async function answerNutritionQuestion(
+  context: NutritionCoachContext,
+  question: string,
+  history: CoachChatMessage[] = []
+): Promise<string> {
+  const ai = getGeminiClient();
+
+  const systemContext = `You are CalBro's AI nutrition coach. Answer using ONLY the user's logged data below.
+If they ask what they ate for breakfast/lunch/dinner/snacks, use mealType, localTime, and items.
+If data is missing, say so clearly and suggest logging meals.
+
+Date: ${context.localDateLabel} (${context.date})
+
+Profile: ${JSON.stringify(context.profile ?? {})}
+
+Meals today:
+${JSON.stringify(context.meals, null, 2)}
+
+Daily totals: ${JSON.stringify(context.totals, null, 2)}
+Daily targets: ${JSON.stringify(context.targets, null, 2)}
+
+Keep answers concise (2-5 sentences), friendly, and actionable. Use kcal and grams.`;
+
+  const contents = [
+    { role: "user" as const, parts: [{ text: systemContext }] },
+    { role: "model" as const, parts: [{ text: "Understood. I will answer based on the user's logged meals and nutrition data for today." }] },
+    ...history.flatMap((msg) => [
+      {
+        role: (msg.role === "user" ? "user" : "model") as "user" | "model",
+        parts: [{ text: msg.content }],
+      },
+    ]),
+    { role: "user" as const, parts: [{ text: question }] },
+  ];
+
+  const response = await ai.models.generateContent({
+    model: GEMINI_MODEL,
+    contents,
+    config: { temperature: 0.35 },
+  });
+
+  const text = response.text?.trim();
+  if (!text) {
+    throw new Error("Gemini returned an empty response.");
+  }
+  return text;
 }
