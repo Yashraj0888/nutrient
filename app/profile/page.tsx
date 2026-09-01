@@ -165,7 +165,7 @@ function ProfileForm({
   }
 
   return (
-    <div className="mobile-container pb-6 pt-safe pt-5">
+    <div className="mobile-container pb-2 pt-safe pt-5">
       <PageHeader title="Account" />
 
       <div className="nv-card mb-4 mt-4 flex flex-col items-center gap-3 p-5">

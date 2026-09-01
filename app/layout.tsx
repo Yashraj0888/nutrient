@@ -36,7 +36,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en" className="h-full light" suppressHydrationWarning>
       <body className="app-shell min-h-full flex flex-col font-sans antialiased">
         <Providers>
-          <div className="flex-1 pb-[5.5rem]">{children}</div>
+          <div className="flex-1 pb-nav">{children}</div>
+          <div className="nv-bottom-fade pointer-events-none fixed inset-x-0 bottom-0 z-40" aria-hidden />
           <BottomNav />
         </Providers>
       </body>

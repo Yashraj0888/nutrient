@@ -18,7 +18,7 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
   const [analysis, setAnalysis] = useState<FoodAnalysisResult | null>(null);
 
   const openCapture = useCallback(() => {
-    setStage("choose");
+    setStage("camera");
   }, []);
 
   const closeAll = useCallback(() => {
@@ -54,7 +54,7 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
       const message =
         err instanceof Error ? err.message : "Could not analyze this image. Please try again.";
       toast.error(message, { duration: 5000 });
-      setStage("choose");
+      setStage("camera");
     }
   }
 
@@ -89,7 +89,7 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
 
       <CameraModal
         open={stage === "camera"}
-        onClose={() => setStage("choose")}
+        onClose={closeAll}
         onCapture={(image) => void analyzeImage(image)}
         onGallery={() => setStage("choose")}
       />

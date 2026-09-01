@@ -45,7 +45,7 @@ export default function AnalyticsPage() {
       <div className="mobile-container pt-safe pt-20 text-center">
         <p className="text-muted-foreground">Set up your profile first.</p>
         <Button asChild className="mt-4 rounded-full bg-nv-lime text-primary-foreground">
-          <Link href="/profile">Join Us</Link>
+          <Link href="/profile">Set up your profile</Link>
         </Button>
       </div>
     );

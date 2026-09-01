@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ScannerIcon } from "@/components/icons/ScannerIcon";
 import {
   IconAccount,
-  IconForum,
   IconHome,
   IconProgress,
-  IconScan,
+  IconSparkle,
 } from "@/components/icons/nutrivision-icons";
 import { ProfileAvatar } from "@/components/shared/ProfileAvatar";
 import { useCaptureFlow } from "@/components/capture/capture-context";
@@ -24,7 +24,7 @@ import { cn } from "@/lib/utils";
 const LINKS = [
   { href: "/", label: "Home", Icon: IconHome },
   { href: "/analytics", label: "Progress", Icon: IconProgress },
-  { href: "/insights", label: "Forum", Icon: IconForum },
+  { href: "/insights", label: "AI Tips", Icon: IconSparkle },
   { href: "/profile", label: "Account", Icon: IconAccount },
 ] as const;
 
@@ -82,7 +82,7 @@ export function AppMenu({ open, onOpenChange }: AppMenuProps) {
             }}
             className="mt-2 flex items-center gap-3 rounded-2xl bg-nv-lime px-4 py-3 text-sm font-bold text-primary-foreground"
           >
-            <IconScan size={20} />
+            <ScannerIcon size={20} color="dark" />
             Scan food
           </button>
         </nav>

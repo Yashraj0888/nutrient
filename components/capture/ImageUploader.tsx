@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 interface ImageUploaderProps {
   open: boolean;
   onClose: () => void;
-  onOpenCamera: () => void;
+  onOpenCamera?: () => void;
   onImageSelected: (image: CapturedImage) => void;
 }
 
@@ -35,28 +35,13 @@ export function ImageUploader({ open, onClose, onOpenCamera, onImageSelected }: 
     <Drawer open={open} onOpenChange={(v) => !v && onClose()}>
       <DrawerContent className="mx-auto max-w-lg pb-safe">
         <DrawerHeader>
-          <DrawerTitle>Log a meal</DrawerTitle>
+          <DrawerTitle>Upload a photo</DrawerTitle>
           <DrawerDescription>
-            Snap a photo or upload one from your gallery and {APP_NAME} will identify what&apos;s on
-            your plate.
+            Choose an image from your gallery and {APP_NAME} will identify what&apos;s on your plate.
           </DrawerDescription>
         </DrawerHeader>
 
         <div className="flex flex-col gap-3 px-4 pb-6">
-          <button
-            type="button"
-            onClick={onOpenCamera}
-            className="tap-target flex items-center gap-4 rounded-2xl border border-border bg-card px-4 py-4 text-left transition active:scale-[0.98] active:bg-muted"
-          >
-            <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-nv-lime/20 text-nv-lime-dark">
-              <IconCamera size={24} />
-            </span>
-            <span className="flex flex-col">
-              <span className="font-medium">Take a photo</span>
-              <span className="text-sm text-muted-foreground">Use your camera to capture the meal</span>
-            </span>
-          </button>
-
           <label
             onDragOver={(e) => {
               e.preventDefault();
@@ -69,8 +54,8 @@ export function ImageUploader({ open, onClose, onOpenCamera, onImageSelected }: 
               void handleFiles(e.dataTransfer.files);
             }}
             className={cn(
-              "tap-target flex cursor-pointer items-center gap-4 rounded-2xl border border-dashed border-border bg-card px-4 py-4 text-left transition active:scale-[0.98] active:bg-muted",
-              isDragging && "border-primary bg-primary/5"
+              "flex cursor-pointer items-center gap-4 rounded-2xl border border-dashed border-border bg-card px-4 py-4 text-left transition active:scale-[0.98]",
+              isDragging && "border-nv-lime bg-nv-lime/5"
             )}
           >
             <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-nv-carbs/20 text-nv-carbs">
@@ -82,7 +67,7 @@ export function ImageUploader({ open, onClose, onOpenCamera, onImageSelected }: 
             </span>
             <span className="flex flex-col">
               <span className="font-medium">Upload from gallery</span>
-              <span className="text-sm text-muted-foreground">Choose an existing photo, or drag one here</span>
+              <span className="text-sm text-muted-foreground">Tap to browse or drag a photo here</span>
             </span>
             <input
               ref={fileInputRef}
@@ -92,6 +77,22 @@ export function ImageUploader({ open, onClose, onOpenCamera, onImageSelected }: 
               onChange={(e) => void handleFiles(e.target.files)}
             />
           </label>
+
+          {onOpenCamera && (
+            <button
+              type="button"
+              onClick={onOpenCamera}
+              className="flex items-center gap-4 rounded-2xl border border-border bg-card px-4 py-4 text-left transition active:scale-[0.98] active:bg-muted"
+            >
+              <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-nv-lime/20">
+                <IconCamera size={24} className="text-nv-lime-dark" />
+              </span>
+              <span className="flex flex-col">
+                <span className="font-medium">Use camera instead</span>
+                <span className="text-sm text-muted-foreground">Take a live photo of your meal</span>
+              </span>
+            </button>
+          )}
         </div>
       </DrawerContent>
     </Drawer>

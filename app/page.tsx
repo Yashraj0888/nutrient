@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { DailyCaloriesCard } from "@/components/dashboard/DailyCaloriesCard";
+import { HomeQuickStats } from "@/components/dashboard/HomeQuickStats";
 import { MacroMiniCards } from "@/components/dashboard/MacroMiniCards";
 import { DailyNutrientBreakdown } from "@/components/dashboard/DailyNutrientBreakdown";
 import { DateStrip } from "@/components/dashboard/DateStrip";
@@ -77,11 +78,30 @@ export default function DashboardPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{APP_NAME}</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Get to know your food&apos;s nutrition to maximize your diet.
+            AI-powered nutrition tracking — scan meals, hit your macros, and get daily insights.
           </p>
         </div>
+
+        <div className="nv-card w-full space-y-3 p-5 text-left">
+          <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">What you get</p>
+          <ul className="space-y-2.5 text-sm text-muted-foreground">
+            <li className="flex gap-2">
+              <span className="text-nv-lime-dark">✓</span>
+              Instant calorie & macro breakdown from food photos
+            </li>
+            <li className="flex gap-2">
+              <span className="text-nv-lime-dark">✓</span>
+              Personalized daily targets from your profile
+            </li>
+            <li className="flex gap-2">
+              <span className="text-nv-lime-dark">✓</span>
+              Progress charts and AI nutrition tips
+            </li>
+          </ul>
+        </div>
+
         <Button asChild className="h-12 w-full rounded-full bg-nv-lime text-base font-bold text-primary-foreground hover:bg-nv-lime/90">
-          <Link href="/profile">Join Us</Link>
+          <Link href="/profile">Set up your profile</Link>
         </Button>
       </div>
     );
@@ -98,6 +118,12 @@ export default function DashboardPage() {
       </div>
 
       <div className="mt-4 space-y-3">
+        <HomeQuickStats
+          totals={totals}
+          targets={targets}
+          mealCount={sortedMeals.length}
+          dayLabel={dayLabel}
+        />
         <DailyCaloriesCard consumed={totals.calories} target={targets.calories} />
         <MacroMiniCards
           carbs={{ value: totals.carbs, target: targets.carbs }}
@@ -125,8 +151,19 @@ export default function DashboardPage() {
 
         <div className="flex flex-col gap-3">
           {sortedMeals.length === 0 ? (
-            <div className="nv-card px-4 py-10 text-center text-sm text-muted-foreground">
-              No meals logged yet. Tap + Add Meal or scan food.
+            <div className="nv-card px-4 py-10 text-center">
+              <p className="text-sm font-semibold text-foreground">No meals logged yet</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Tap the scan button below or add a meal to see nutrition for {dayLabel.toLowerCase()}.
+              </p>
+              <button
+                type="button"
+                onClick={openCapture}
+                className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-nv-lime px-4 py-2 text-sm font-bold text-primary-foreground"
+              >
+                <IconPlus size={16} />
+                Scan first meal
+              </button>
             </div>
           ) : (
             sortedMeals.map((entry) => (

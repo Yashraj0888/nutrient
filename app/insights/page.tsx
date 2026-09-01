@@ -39,7 +39,7 @@ export default function InsightsPage() {
     return (
       <div className="mobile-container pt-safe pt-20 text-center">
         <Button asChild className="rounded-full bg-nv-lime text-primary-foreground">
-          <Link href="/profile">Join Us</Link>
+          <Link href="/profile">Set up your profile</Link>
         </Button>
       </div>
     );
@@ -47,7 +47,7 @@ export default function InsightsPage() {
 
   return (
     <div className="mobile-container pb-4 pt-safe pt-5">
-      <PageHeader title="Forum" />
+      <PageHeader title="AI Nutrition Tips" />
 
       <div className="mt-5">
         {log.meals.length === 0 ? (

@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { ScannerIcon } from "@/components/icons/ScannerIcon";
 import {
-  IconCamera,
   IconClose,
   IconFlash,
   IconGallery,
@@ -167,7 +167,7 @@ function CameraModalInner({
               aria-label="Take photo"
               className="nv-fab-scan flex size-20 items-center justify-center rounded-full transition-transform active:scale-95 disabled:opacity-40"
             >
-              <IconCamera size={28} className="text-[#1a2e05]" />
+              <ScannerIcon size={32} color="dark" />
             </button>
 
             <button
