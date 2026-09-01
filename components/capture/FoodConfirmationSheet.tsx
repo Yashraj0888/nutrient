@@ -362,7 +362,7 @@ function FoodConfirmationContent({
           </div>
         </div>
 
-        <DrawerFooter className="relative z-10 shrink-0 gap-3 border-t bg-background pt-3">
+        <DrawerFooter className="relative z-10 shrink-0 gap-3 bg-popover pt-3">
           {!showPerItemRatings && <FoodHealthRating rating={mealHealth} />}
           <div className="grid grid-cols-4 gap-2 text-center">
             <TotalStat label="kcal" value={Math.round(totals.calories)} color="text-foreground" />
