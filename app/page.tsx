@@ -14,6 +14,9 @@ import { useRequireProfile } from "@/hooks/use-require-profile";
 import { useDailyLog } from "@/hooks/use-daily-log";
 import { formatDayHeading, removeMealEntry, todayKey } from "@/lib/storage";
 import { useCaptureFlow } from "@/components/capture/capture-context";
+import { MealDetailSheet } from "@/components/dashboard/MealDetailSheet";
+import type { MealLogEntry } from "@/lib/types";
+import { toast } from "sonner";
 
 function greeting() {
   const h = new Date().getHours();
@@ -27,7 +30,8 @@ export default function DashboardPage() {
   const [dateKey, setDateKey] = useState(() => todayKey());
   const [followToday, setFollowToday] = useState(true);
   const { log, totals } = useDailyLog(dateKey);
-  const { openCapture } = useCaptureFlow();
+  const { openCapture, openManual } = useCaptureFlow();
+  const [selectedMeal, setSelectedMeal] = useState<MealLogEntry | null>(null);
 
   const dayLabel = useMemo(() => formatDayHeading(dateKey), [dateKey]);
 
@@ -101,7 +105,7 @@ export default function DashboardPage() {
           <h2 className="text-base font-bold">{dayLabel}&apos;s meals</h2>
           <button
             type="button"
-            onClick={openCapture}
+            onClick={() => openCapture({ date: dateKey })}
             className="flex items-center gap-1 text-sm font-bold text-nv-lime-dark"
           >
             <IconPlus size={16} />
@@ -114,11 +118,11 @@ export default function DashboardPage() {
             <div className="nv-card px-4 py-10 text-center">
               <p className="text-sm font-semibold text-foreground">No meals logged yet</p>
               <p className="mt-1 text-xs text-muted-foreground">
-                Tap the scan button below or add a meal to see nutrition for {dayLabel.toLowerCase()}.
+                Tap the camera to scan, or add a food manually below.
               </p>
               <button
                 type="button"
-                onClick={openCapture}
+                onClick={() => openCapture({ date: dateKey })}
                 className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-nv-lime px-4 py-2 text-sm font-bold text-primary-foreground"
               >
                 <IconPlus size={16} />
@@ -130,12 +134,36 @@ export default function DashboardPage() {
               <TodayMealCard
                 key={entry.id}
                 entry={entry}
-                onRemove={(id) => removeMealEntry(dateKey, id)}
+                onOpen={setSelectedMeal}
+                onRemove={(id) => {
+                  removeMealEntry(dateKey, id);
+                  toast.info("Meal removed");
+                }}
               />
             ))
           )}
         </div>
+
+        <div className="mt-5 pb-2 text-center">
+          <button
+            type="button"
+            onClick={() => openManual({ date: dateKey })}
+            className="text-sm font-semibold text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+          >
+            Add manually
+          </button>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Type a food name and weight instead of taking a photo
+          </p>
+        </div>
       </section>
+
+      <MealDetailSheet
+        open={selectedMeal !== null}
+        entry={selectedMeal}
+        date={dateKey}
+        onClose={() => setSelectedMeal(null)}
+      />
     </div>
   );
 }

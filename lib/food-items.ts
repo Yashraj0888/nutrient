@@ -28,8 +28,15 @@ export function scaleFoodItem(original: DetectedFoodItem, grams: number): Detect
     carbs: round1(original.carbs),
     fat: round1(original.fat),
     fiber: round1(original.fiber),
+    sugar_g: original.sugar_g != null ? round1(original.sugar_g) : undefined,
     vitamins,
-    minerals,
+    minerals: {
+      ...minerals,
+      cholesterol_mg:
+        original.minerals.cholesterol_mg != null
+          ? Math.round(original.minerals.cholesterol_mg * ratio)
+          : undefined,
+    },
   };
 }
 

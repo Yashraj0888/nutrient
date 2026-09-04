@@ -14,8 +14,11 @@ import {
   getMetabolicBreakdown,
 } from "@/lib/nutrition-calculator";
 import { MetabolicTargetsCard } from "@/components/profile/MetabolicTargetsCard";
+import { AiProviderSettings } from "@/components/profile/AiProviderSettings";
 import { ProfileSection, ProfileSelect, type ProfileSelectOption } from "@/components/profile/ProfileSelect";
 import { clearProfile, generateId, saveProfile } from "@/lib/storage";
+import { clearLlmSettings, getLlmSettings, hasLlmApiKey, saveLlmSettings } from "@/lib/llm-settings";
+import type { LlmSettings } from "@/lib/llm-types";
 import { useProfile } from "@/hooks/use-profile";
 import { APP_NAME } from "@/lib/brand";
 import type { ActivityLevel, Gender, Goal, UserProfile } from "@/lib/types";
@@ -85,6 +88,8 @@ function ProfileForm({
   const [form, setForm] = useState(() => (profile ? profileToForm(profile) : EMPTY_FORM));
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(profile?.avatarUrl);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [llmSettings, setLlmSettings] = useState<LlmSettings>(() => getLlmSettings());
+  const [showLlmKey, setShowLlmKey] = useState(false);
 
   const preview = useMemo(() => {
     const parsedAge = parseInt(form.age, 10);
@@ -122,6 +127,16 @@ function ProfileForm({
       toast.error("Please enter a valid height in cm.");
       return;
     }
+    if (!hasLlmApiKey(llmSettings)) {
+      toast.error("Add your AI API key above to get started.");
+      return;
+    }
+
+    saveLlmSettings({
+      provider: llmSettings.provider,
+      apiKey: llmSettings.apiKey.trim(),
+      model: llmSettings.model.trim(),
+    });
 
     const now = new Date().toISOString();
     const next: UserProfile = {
@@ -145,8 +160,11 @@ function ProfileForm({
 
   function handleReset() {
     clearProfile();
+    clearLlmSettings();
     setForm(EMPTY_FORM);
     setAvatarUrl(undefined);
+    setLlmSettings(getLlmSettings());
+    setShowLlmKey(false);
     refresh();
     toast.info("Profile cleared.");
   }
@@ -288,6 +306,13 @@ function ProfileForm({
           <MetabolicTargetsCard metabolic={preview.metabolic} targets={preview.targets} />
         </div>
       )}
+
+      <AiProviderSettings
+        value={llmSettings}
+        onChange={setLlmSettings}
+        showKey={showLlmKey}
+        onShowKeyChange={setShowLlmKey}
+      />
 
       <Button
         className="mt-5 h-12 w-full rounded-full bg-nv-lime text-base font-bold text-primary-foreground hover:bg-nv-lime/90"

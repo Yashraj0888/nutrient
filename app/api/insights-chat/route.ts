@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { answerNutritionQuestion } from "@/lib/gemini";
+import { answerNutritionQuestion } from "@/lib/llm";
+import { resolveLlmCredentials } from "@/lib/llm-credentials";
 import { toPublicApiError } from "@/lib/api-errors";
 import { insightsChatRequestSchema } from "@/lib/insights-api-schema";
 
@@ -22,10 +23,12 @@ export async function POST(request: Request) {
   }
 
   try {
+    const credentials = resolveLlmCredentials(request);
     const answer = await answerNutritionQuestion(
       parsed.data.context,
       parsed.data.question,
-      parsed.data.history
+      parsed.data.history,
+      credentials
     );
     return NextResponse.json({ answer });
   } catch (error) {

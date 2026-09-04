@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { analyzeFoodImage } from "@/lib/gemini";
+import { analyzeFoodImage } from "@/lib/llm";
+import { resolveLlmCredentials } from "@/lib/llm-credentials";
 import { toPublicApiError } from "@/lib/api-errors";
 
 export const runtime = "nodejs";
@@ -35,8 +36,9 @@ export async function POST(request: Request) {
   }
 
   try {
+    const credentials = resolveLlmCredentials(request);
     const base64 = stripDataUrlPrefix(parsed.data.image);
-    const result = await analyzeFoodImage(base64, parsed.data.mimeType);
+    const result = await analyzeFoodImage(base64, parsed.data.mimeType, credentials);
     return NextResponse.json(result);
   } catch (error) {
     console.error("[analyze-food] failed", error);

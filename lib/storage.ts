@@ -146,10 +146,18 @@ export function removeMealEntry(date: string, mealId: string): void {
 }
 
 export function updateMealItems(date: string, mealId: string, items: DetectedFoodItem[]): void {
+  updateMealEntry(date, mealId, { items });
+}
+
+export function updateMealEntry(
+  date: string,
+  mealId: string,
+  patch: Partial<Pick<MealLogEntry, "mealName" | "mealType" | "items" | "imageUrl">>
+): void {
   const logs = getAllLogs();
   const existing = logs[date];
   if (!existing) return;
-  existing.meals = existing.meals.map((m) => (m.id === mealId ? { ...m, items } : m));
+  existing.meals = existing.meals.map((m) => (m.id === mealId ? { ...m, ...patch } : m));
   logs[date] = existing;
   saveAllLogs(logs);
 }

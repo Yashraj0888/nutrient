@@ -68,7 +68,7 @@ export function BottomNav() {
       <div className="relative mb-3 w-full max-w-md">
         <button
           type="button"
-          onClick={openCapture}
+          onClick={() => openCapture()}
           aria-label="Scan food"
           className="nv-fab-scan absolute -top-7 left-1/2 z-20 flex size-[3.75rem] -translate-x-1/2 items-center justify-center rounded-full transition-transform active:scale-95"
         >

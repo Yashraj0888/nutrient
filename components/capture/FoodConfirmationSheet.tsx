@@ -20,6 +20,8 @@ import { Label } from "@/components/ui/label";
 import { formatFoodName, formatMealName, guessMealTypeByTime, scaleFoodItem, sumFoodItems } from "@/lib/food-items";
 import type { DetectedFoodItem, FoodAnalysisResult, MealType } from "@/lib/types";
 import { MEAL_TYPES, MEAL_TYPE_LABELS } from "@/lib/types";
+import { llmFetch, hasLlmApiKey } from "@/lib/llm-settings";
+import { useApiKeyGate } from "@/components/ai/ApiKeyGate";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -87,6 +89,7 @@ function FoodConfirmationContent({
   onClose: () => void;
   onConfirm: (payload: { mealName: string; mealType: MealType; items: DetectedFoodItem[] }) => void;
 }) {
+  const { requestApiKey } = useApiKeyGate();
   const initial = buildInitialState(analysis);
   const [mealName, setMealName] = useState(initial.mealName);
   const [mealType, setMealType] = useState<MealType>(initial.mealType);
@@ -140,11 +143,16 @@ function FoodConfirmationContent({
     const grams = parseFloat(customForm.grams) || 0;
     if (!customForm.name.trim() || grams <= 0) return;
 
+    if (!hasLlmApiKey()) {
+      toast.error("Add your AI API key to estimate foods.");
+      requestApiKey();
+      return;
+    }
+
     setCustomEstimating(true);
     try {
-      const res = await fetch("/api/estimate-food", {
+      const res = await llmFetch("/api/estimate-food", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: customForm.name.trim(), grams }),
       });
       const data = await res.json().catch(() => ({}));

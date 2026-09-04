@@ -1,30 +1,17 @@
 import { GoogleGenAI, Type, type Schema } from "@google/genai";
-import type { DailyTotals, DetectedFoodItem, FoodAnalysisResult, NutrientTargets } from "./types";
+import type { DetectedFoodItem, FoodAnalysisResult } from "./types";
 import type { NutritionCoachContext } from "./nutrition-coach";
+import type { LlmCredentials } from "./llm-types";
 import { generateId } from "./storage";
 import { hasSuspiciousMicronutrients, mergeMicronutrients } from "./nutrient-validation";
 
-export const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.7-flash";
 const ANALYSIS_TEMPERATURE = 0;
 const REFINEMENT_TEMPERATURE = 0;
-
-const PLACEHOLDER_KEYS = new Set(["your_gemini_api_key_here", ""]);
 
 let client: GoogleGenAI | null = null;
 let cachedKey: string | null = null;
 
-function resolveApiKey(): string {
-  const apiKey = process.env.GEMINI_API_KEY?.trim();
-  if (!apiKey || PLACEHOLDER_KEYS.has(apiKey)) {
-    throw new Error(
-      "GEMINI_API_KEY is not set. Add your key to .env.local (not the placeholder) and restart the dev server."
-    );
-  }
-  return apiKey;
-}
-
-export function getGeminiClient(): GoogleGenAI {
-  const apiKey = resolveApiKey();
+export function getGeminiClient(apiKey: string): GoogleGenAI {
   if (client && cachedKey === apiKey) return client;
   client = new GoogleGenAI({ apiKey });
   cachedKey = apiKey;
@@ -141,7 +128,7 @@ MACRO & PORTION RULES (mandatory):
 9. When uncertain between two database entries, pick the one that matches cooking method (raw vs boiled vs fried vs instant/packaged).
 `;
 
-const FOOD_ANALYSIS_PROMPT = `You are a senior clinical nutritionist and expert food-image analyst building data for a production consumer nutrition app. Accuracy is critical — users rely on these numbers for health decisions.
+export const FOOD_ANALYSIS_PROMPT = `You are a senior clinical nutritionist and expert food-image analyst building data for a production consumer nutrition app. Accuracy is critical — users rely on these numbers for health decisions.
 
 Study the image deeply. Spend substantial reasoning on visual details BEFORE assigning any numbers. Do not rush.
 
@@ -172,7 +159,7 @@ ${MICRONUTRIENT_RULES}
 - Unique ids: "item-1", "item-2", ...
 - Return ONLY valid JSON matching the schema. No commentary.`;
 
-const FOOD_ESTIMATE_PROMPT = `You are a senior clinical nutritionist with USDA FoodData Central and NIN IFCT access, producing data for a production consumer app.
+export const FOOD_ESTIMATE_PROMPT = `You are a senior clinical nutritionist with USDA FoodData Central and NIN IFCT access, producing data for a production consumer app.
 
 Given food name and exact grams, return precise nutrients for that portion.
 
@@ -185,7 +172,7 @@ Naming:
 
 Return one food item JSON. id = "estimate-1". estimated_grams must match user input exactly.`;
 
-const REFINE_MICRONUTRIENTS_PROMPT = `You are auditing micronutrient data for a production nutrition app. A prior estimate has implausible or missing micronutrients (often incorrectly all zeros).
+export const REFINE_MICRONUTRIENTS_PROMPT = `You are auditing micronutrient data for a production nutrition app. A prior estimate has implausible or missing micronutrients (often incorrectly all zeros).
 
 Re-lookup ONLY micronutrients in USDA FoodData Central and NIN IFCT for the exact food, ingredients, and cooking method implied by the name and macros below. Do NOT change calories, protein, carbs, fat, fiber, or estimated_grams.
 
@@ -216,7 +203,7 @@ function roundMicros(item: DetectedFoodItem): DetectedFoodItem {
 }
 
 /** Reconcile calories with macro-derived energy. */
-function normalizeFoodItem(item: DetectedFoodItem): DetectedFoodItem {
+export function normalizeFoodItem(item: DetectedFoodItem): DetectedFoodItem {
   const protein = Math.round(item.protein * 10) / 10;
   const carbs = Math.round(item.carbs * 10) / 10;
   const fat = Math.round(item.fat * 10) / 10;
@@ -238,8 +225,11 @@ function normalizeFoodItem(item: DetectedFoodItem): DetectedFoodItem {
   });
 }
 
-async function refineMicronutrients(item: DetectedFoodItem): Promise<DetectedFoodItem> {
-  const ai = getGeminiClient();
+async function refineMicronutrients(
+  item: DetectedFoodItem,
+  credentials: LlmCredentials
+): Promise<DetectedFoodItem> {
+  const ai = getGeminiClient(credentials.apiKey);
 
   const context = [
     `Food: ${item.name}${item.indianName ? ` (${item.indianName})` : ""}`,
@@ -249,7 +239,7 @@ async function refineMicronutrients(item: DetectedFoodItem): Promise<DetectedFoo
   ].join("\n");
 
   const response = await ai.models.generateContent({
-    model: GEMINI_MODEL,
+    model: credentials.model,
     contents: `${REFINE_MICRONUTRIENTS_PROMPT}\n\n${context}`,
     config: {
       responseMimeType: "application/json",
@@ -270,29 +260,47 @@ async function refineMicronutrients(item: DetectedFoodItem): Promise<DetectedFoo
   return normalizeFoodItem(mergeMicronutrients(item, patch));
 }
 
-async function ensureReliableMicronutrients(item: DetectedFoodItem): Promise<DetectedFoodItem> {
+export async function ensureReliableMicronutrients(
+  item: DetectedFoodItem,
+  refine: (item: DetectedFoodItem) => Promise<DetectedFoodItem>
+): Promise<DetectedFoodItem> {
   const normalized = normalizeFoodItem(item);
   if (!hasSuspiciousMicronutrients(normalized)) return normalized;
   try {
-    return await refineMicronutrients(normalized);
+    return await refine(normalized);
   } catch {
     return normalized;
   }
 }
 
-async function normalizeAnalysisResult(result: FoodAnalysisResult): Promise<FoodAnalysisResult> {
-  const detectedItems = await Promise.all(result.detectedItems.map(ensureReliableMicronutrients));
+async function ensureReliableMicronutrientsGemini(
+  item: DetectedFoodItem,
+  credentials: LlmCredentials
+): Promise<DetectedFoodItem> {
+  return ensureReliableMicronutrients(item, (normalized) =>
+    refineMicronutrients(normalized, credentials)
+  );
+}
+
+async function normalizeAnalysisResult(
+  result: FoodAnalysisResult,
+  credentials: LlmCredentials
+): Promise<FoodAnalysisResult> {
+  const detectedItems = await Promise.all(
+    result.detectedItems.map((item) => ensureReliableMicronutrientsGemini(item, credentials))
+  );
   return { ...result, detectedItems };
 }
 
 export async function analyzeFoodImage(
   base64Image: string,
-  mimeType: string
+  mimeType: string,
+  credentials: LlmCredentials
 ): Promise<FoodAnalysisResult> {
-  const ai = getGeminiClient();
+  const ai = getGeminiClient(credentials.apiKey);
 
   const response = await ai.models.generateContent({
-    model: GEMINI_MODEL,
+    model: credentials.model,
     contents: [
       {
         role: "user",
@@ -315,17 +323,18 @@ export async function analyzeFoodImage(
   }
 
   const parsed = JSON.parse(text) as FoodAnalysisResult;
-  return normalizeAnalysisResult(parsed);
+  return normalizeAnalysisResult(parsed, credentials);
 }
 
 export async function estimateFoodByName(
   name: string,
-  grams: number
+  grams: number,
+  credentials: LlmCredentials
 ): Promise<DetectedFoodItem> {
-  const ai = getGeminiClient();
+  const ai = getGeminiClient(credentials.apiKey);
 
   const response = await ai.models.generateContent({
-    model: GEMINI_MODEL,
+    model: credentials.model,
     contents: `Food: ${name.trim()}\nQuantity: ${grams} grams\n\n${FOOD_ESTIMATE_PROMPT}`,
     config: {
       responseMimeType: "application/json",
@@ -340,13 +349,14 @@ export async function estimateFoodByName(
   }
 
   const parsed = JSON.parse(text) as DetectedFoodItem;
-  return ensureReliableMicronutrients(
+  return ensureReliableMicronutrientsGemini(
     normalizeFoodItem({
       ...parsed,
       id: generateId("custom"),
       estimatedGrams: grams,
       name: parsed.name || name.trim(),
-    })
+    }),
+    credentials
   );
 }
 
@@ -373,12 +383,8 @@ const insightSchema: Schema = {
   required: ["summary", "insights"],
 };
 
-export async function generateDailyInsights(
-  context: NutritionCoachContext
-): Promise<{ summary: string; insights: { kind: string; nutrient?: string; message: string }[] }> {
-  const ai = getGeminiClient();
-
-  const prompt = `You are a friendly registered-dietitian-style nutrition coach for the CalBro app.
+export function buildDailyInsightsPrompt(context: NutritionCoachContext): string {
+  return `You are a friendly registered-dietitian-style nutrition coach for the CalBro app.
 The user is viewing their AI insights page. Produce a helpful snapshot of their day so far.
 
 Date: ${context.localDateLabel} (${context.date})
@@ -403,9 +409,17 @@ Write:
   - "warning" for concerning excesses.
   - "info" for neutral observations.
 Keep each insight message under 160 characters. Be specific with numbers and meal names where useful.`;
+}
+
+export async function generateDailyInsights(
+  context: NutritionCoachContext,
+  credentials: LlmCredentials
+): Promise<{ summary: string; insights: { kind: string; nutrient?: string; message: string }[] }> {
+  const ai = getGeminiClient(credentials.apiKey);
+  const prompt = buildDailyInsightsPrompt(context);
 
   const response = await ai.models.generateContent({
-    model: GEMINI_MODEL,
+    model: credentials.model,
     contents: prompt,
     config: {
       responseMimeType: "application/json",
@@ -427,14 +441,8 @@ export interface CoachChatMessage {
   content: string;
 }
 
-export async function answerNutritionQuestion(
-  context: NutritionCoachContext,
-  question: string,
-  history: CoachChatMessage[] = []
-): Promise<string> {
-  const ai = getGeminiClient();
-
-  const systemContext = `You are CalBro's AI nutrition coach. Answer using ONLY the user's logged data below.
+export function buildCoachSystemContext(context: NutritionCoachContext): string {
+  return `You are CalBro's AI nutrition coach. Answer using ONLY the user's logged data below.
 If they ask what they ate for breakfast/lunch/dinner/snacks, use mealType, localTime, and items.
 If data is missing, say so clearly and suggest logging meals.
 
@@ -449,6 +457,16 @@ Daily totals: ${JSON.stringify(context.totals, null, 2)}
 Daily targets: ${JSON.stringify(context.targets, null, 2)}
 
 Keep answers concise (2-5 sentences), friendly, and actionable. Use kcal and grams.`;
+}
+
+export async function answerNutritionQuestion(
+  context: NutritionCoachContext,
+  question: string,
+  history: CoachChatMessage[] = [],
+  credentials: LlmCredentials
+): Promise<string> {
+  const ai = getGeminiClient(credentials.apiKey);
+  const systemContext = buildCoachSystemContext(context);
 
   const contents = [
     { role: "user" as const, parts: [{ text: systemContext }] },
@@ -463,7 +481,7 @@ Keep answers concise (2-5 sentences), friendly, and actionable. Use kcal and gra
   ];
 
   const response = await ai.models.generateContent({
-    model: GEMINI_MODEL,
+    model: credentials.model,
     contents,
     config: { temperature: 0.35 },
   });

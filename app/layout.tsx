@@ -31,7 +31,11 @@ export const viewport: Viewport = {
   themeColor: "#eef1f4",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
     <html lang="en" className="h-full light" suppressHydrationWarning>
       <body className="app-shell min-h-full flex flex-col font-sans antialiased">

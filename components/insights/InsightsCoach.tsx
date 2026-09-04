@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { IconSparkle } from "@/components/icons/nutrivision-icons";
 import { buildNutritionCoachContext } from "@/lib/nutrition-coach";
+import { hasLlmApiKey, llmFetch } from "@/lib/llm-settings";
+import { useApiKeyGate } from "@/components/ai/ApiKeyGate";
 import type { DailyLog, DailyTotals, InsightsResult, NutrientTargets, UserProfile } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -44,6 +46,7 @@ function AssistantBubble({
 }
 
 export function InsightsCoach({ date, log, totals, targets, profile }: InsightsCoachProps) {
+  const { requestApiKey } = useApiKeyGate();
   const context = useMemo(
     () => buildNutritionCoachContext(date, log, totals, targets, profile),
     [date, log, totals, targets, profile]
@@ -60,11 +63,11 @@ export function InsightsCoach({ date, log, totals, targets, profile }: InsightsC
   const wasChatLoadingRef = useRef(false);
 
   const fetchSummary = useCallback(async () => {
+    if (!hasLlmApiKey()) return;
     setSummaryLoading(true);
     try {
-      const res = await fetch("/api/generate-insights", {
+      const res = await llmFetch("/api/generate-insights", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(context),
       });
       const data = await res.json();
@@ -131,9 +134,8 @@ export function InsightsCoach({ date, log, totals, targets, profile }: InsightsC
     setChatLoading(true);
 
     try {
-      const res = await fetch("/api/insights-chat", {
+      const res = await llmFetch("/api/insights-chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: q, history: messages, context }),
       });
       const data = await res.json();
@@ -152,6 +154,21 @@ export function InsightsCoach({ date, log, totals, targets, profile }: InsightsC
     return (
       <div className="nv-card px-4 py-12 text-center text-sm text-muted-foreground">
         Log meals today to get your daily summary and ask nutrition questions.
+      </div>
+    );
+  }
+
+  if (!hasLlmApiKey()) {
+    return (
+      <div className="nv-card flex flex-col items-center gap-3 px-4 py-12 text-center text-sm text-muted-foreground">
+        <p>Add your AI API key to unlock daily insights and coaching.</p>
+        <Button
+          type="button"
+          className="rounded-full bg-nv-lime font-bold text-primary-foreground hover:bg-nv-lime/90"
+          onClick={requestApiKey}
+        >
+          Add API key
+        </Button>
       </div>
     );
   }

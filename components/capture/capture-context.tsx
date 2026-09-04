@@ -2,8 +2,16 @@
 
 import { createContext, useContext } from "react";
 
+export interface OpenLogOptions {
+  /** Date key (YYYY-MM-DD) to log into. Defaults to today. */
+  date?: string;
+}
+
 interface CaptureContextValue {
-  openCapture: () => void;
+  /** Opens the camera directly */
+  openCapture: (opts?: OpenLogOptions) => void;
+  /** Opens manual name + grams logger */
+  openManual: (opts?: OpenLogOptions) => void;
 }
 
 export const CaptureContext = createContext<CaptureContextValue | null>(null);

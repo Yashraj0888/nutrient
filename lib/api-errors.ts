@@ -3,29 +3,43 @@ export function toPublicApiError(error: unknown): { message: string; status: num
   const raw = error instanceof Error ? error.message : String(error);
 
   if (
+    raw.includes("LLM_API_KEY_MISSING") ||
     raw.includes("API_KEY_INVALID") ||
     raw.includes("API key not valid") ||
-    raw.includes("GEMINI_API_KEY is not set") ||
-    raw.includes("your_gemini_api_key_here")
+    raw.includes("Incorrect API key") ||
+    raw.includes("invalid_api_key") ||
+    raw.includes("authentication_error") ||
+    raw.includes("invalid x-api-key")
   ) {
     return {
       message:
-        "Gemini API key is missing or invalid. Add a valid GEMINI_API_KEY to .env.local and restart the dev server.",
+        "AI API key is missing or invalid. Open Account → AI provider, paste your key, and save.",
       status: 503,
     };
   }
 
-  if (raw.includes("404") || raw.includes("not found") || raw.includes("NOT_FOUND")) {
+  if (
+    raw.includes("404") ||
+    raw.includes("not found") ||
+    raw.includes("NOT_FOUND") ||
+    raw.includes("model_not_found") ||
+    raw.includes("does not exist")
+  ) {
     return {
       message:
-        "The configured Gemini model is unavailable. Try setting GEMINI_MODEL=gemini-3.7-flash in .env.local.",
+        "The selected AI model is unavailable. Try the default model or another model id in Account → AI provider.",
       status: 502,
     };
   }
 
-  if (raw.includes("429") || raw.includes("RESOURCE_EXHAUSTED") || raw.includes("quota")) {
+  if (
+    raw.includes("429") ||
+    raw.includes("RESOURCE_EXHAUSTED") ||
+    raw.includes("quota") ||
+    raw.includes("rate_limit")
+  ) {
     return {
-      message: "Gemini rate limit reached. Please wait a moment and try again.",
+      message: "AI rate limit reached. Please wait a moment and try again.",
       status: 429,
     };
   }

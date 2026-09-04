@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
-import { generateDailyInsights } from "@/lib/gemini";
+import { generateDailyInsights } from "@/lib/llm";
+import { resolveLlmCredentials } from "@/lib/llm-credentials";
 import { toPublicApiError } from "@/lib/api-errors";
 import { nutritionCoachContextSchema } from "@/lib/insights-api-schema";
 
@@ -23,7 +23,8 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await generateDailyInsights(parsed.data);
+    const credentials = resolveLlmCredentials(request);
+    const result = await generateDailyInsights(parsed.data, credentials);
     return NextResponse.json(result);
   } catch (error) {
     console.error("[generate-insights] failed", error);

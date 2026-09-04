@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { estimateFoodByName } from "@/lib/gemini";
+import { estimateFoodByName } from "@/lib/llm";
+import { resolveLlmCredentials } from "@/lib/llm-credentials";
 import { toPublicApiError } from "@/lib/api-errors";
 
 export const runtime = "nodejs";
@@ -27,7 +28,8 @@ export async function POST(request: Request) {
   }
 
   try {
-    const item = await estimateFoodByName(parsed.data.name, parsed.data.grams);
+    const credentials = resolveLlmCredentials(request);
+    const item = await estimateFoodByName(parsed.data.name, parsed.data.grams, credentials);
     return NextResponse.json(item);
   } catch (error) {
     console.error("[estimate-food] failed", error);
